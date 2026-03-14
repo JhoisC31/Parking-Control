@@ -1,4 +1,4 @@
-# Par — Sistema de Gestión de Estacionamiento
+# Parking — Sistema de Gestión de Estacionamiento
 
 Sistema web para gestión de tickets, espacios y vehículos en un estacionamiento.
 
