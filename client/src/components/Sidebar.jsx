@@ -24,7 +24,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="logo-text">Park Control</div>
+        <div className="logo-text">Parking Control</div>
         <div className="logo-sub">Sistema de Gestión De Tickets</div>
       </div>
 

@@ -148,9 +148,6 @@ export default function RegisterEntry() {
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--accent)' }}>RD${t.rate}.00 / hora</span>
                 </div>
               ))}
-              <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 10, lineHeight: 1.5 }}>
-                Tarifa por hora completa o fracción. Mínimo 1 hora.
-              </p>
             </div>
           </div>
 

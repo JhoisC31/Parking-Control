@@ -26,7 +26,7 @@ export default function Topbar({ pathname }) {
     <header className="topbar">
       <div>
         <div className="topbar-title">
-          Park Control / <span>{title}</span>
+          Parking Control / <span>{title}</span>
         </div>
         {sub && <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>{sub}</div>}
       </div>

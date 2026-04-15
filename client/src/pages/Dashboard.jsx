@@ -47,7 +47,7 @@ export default function Dashboard() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Ingresos Hoy</div>
-          <div className="stat-value">${totalRevenue.toFixed(2)}</div>
+          <div className="stat-value">RD${totalRevenue.toFixed(2)}</div>
           <div className="stat-detail">recaudado en el día</div>
         </div>
       </div>
