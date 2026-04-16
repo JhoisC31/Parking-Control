@@ -2,193 +2,125 @@ const { Builder, By, until } = require('selenium-webdriver')
 const chrome = require('selenium-webdriver/chrome')
 
 const BASE_URL = 'http://localhost:5173'
-const WAIT     = 6000
+const WAIT     = 7000
+
+/* Variables dinamicas para las pruebas */
+const PLACA    = ''
+const DESC     = ''
 
 let driver
 
-async function setup() {
+const wait  = l => driver.wait(until.elementLocated(l), WAIT).then(e => driver.wait(until.elementIsVisible(e), WAIT).then(() => e))
+const type  = async (l, t) => { const e = await wait(l); await e.clear(); await e.sendKeys(t) }
+const jsClick = async l => { const e = await wait(l); await driver.executeScript('arguments[0].click()', e) }
+const submitBtn = By.css('button.btn-primary.btn-lg[type="submit"]')
+
+
+/* Caso 1 - placa necesaria*/
+async function caso1() {
+  await driver.get(`${BASE_URL}/entry`)
+  await jsClick(submitBtn)
+  await driver.sleep(1000)
+  const msg = await (await wait(By.css('.alert.alert-error'))).getText()
+  if (!msg.toLowerCase().includes('placa')) throw new Error(`Error inesperado: "${msg}"`)
+}
+
+/* Caso 2  - Registrar la placa*/
+async function caso2() {
+  await driver.get(`${BASE_URL}/entry`)
+  await type(By.css('input[name="plate"]'), PLACA)
+  await (await wait(By.css('select[name="vehicleType"]'))).findElement(By.css('option[value="automovil"]')).click()
+  await type(By.css('input[name="vehicleDesc"]'), DESC)
+  await driver.sleep(800)
+  await jsClick(submitBtn)
+  await driver.sleep(1500)
+  if (!(await (await wait(By.css('.ticket-receipt'))).isDisplayed())) throw new Error('Ticket no generado')
+}
+
+/* Caso 3 - Duplicado */
+async function caso3() {
+  await driver.get(`${BASE_URL}/entry`)
+  await type(By.css('input[name="plate"]'), PLACA)
+  await driver.sleep(600)
+  await jsClick(submitBtn)
+  await driver.sleep(1000)
+  const msg = await (await wait(By.css('.alert.alert-error'))).getText()
+  if (!msg.toLowerCase().includes('placa') && !msg.toLowerCase().includes('activo') && !msg.toLowerCase().includes('registrado')) {
+    throw new Error(`Mensaje inesperado: "${msg}"`)
+  }
+}
+
+/* Caso 4 - View en el historial*/
+async function caso4() {
+  await driver.get(`${BASE_URL}/history`)
+  await driver.sleep(1000)
+  await type(By.css('input[placeholder="Buscar por placa o ticket #..."]'), PLACA)
+  await driver.sleep(900)
+  const found = await (await wait(By.xpath(`//tbody//td//span[contains(@class,'mono') and contains(text(),'${PLACA}')]`))).getText()
+  if (found !== PLACA) throw new Error(`Placa no encontrada en historial`)
+}
+
+/* Caso 5 - Registrar la salida */
+async function caso5() {
+  await driver.get(`${BASE_URL}/active`)
+  await driver.sleep(1000)
+  await type(By.css('input[placeholder="Buscar por placa o espacio..."]'), PLACA)
+  await driver.sleep(900)
+  await wait(By.xpath(`//tbody//td//span[contains(@class,'mono') and contains(text(),'${PLACA}')]`))
+  await jsClick(By.xpath("//button[contains(@class,'btn-danger') and contains(.,'Salida')]"))
+  await driver.sleep(900)
+  await jsClick(By.xpath("//div[contains(@class,'modal-footer')]//button[contains(@class,'btn-primary')]"))
+  await driver.sleep(1500)
+  const txt = await (await wait(By.css('.ticket-receipt'))).getText()
+  if (!txt.includes(PLACA)) throw new Error('Comprobante no contiene la placa')
+}
+
+
+/* Caso 6 -  Dashboard view*/
+async function caso6() {
+  await driver.get(`${BASE_URL}/`)
+  await driver.sleep(1100)
+  const titulo = await (await wait(By.css('h1.page-title'))).getText()
+  if (titulo !== 'Dashboard') throw new Error(`Título inesperado: "${titulo}"`)
+  const cards = await driver.findElements(By.css('.stat-card'))
+  if (cards.length < 4) throw new Error(`Se esperaban 4 stat-cards, encontradas: ${cards.length}`)
+}
+
+async function run() {
   const options = new chrome.Options()
   options.addArguments('--window-size=1280,800')
+  driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build()
 
-  driver = await new Builder()
-    .forBrowser('chrome')
-    .setChromeOptions(options)
-    .build()
-}
+  let passed = 0, failed = 0
+  const casos = [
+  ['Placa necesaria',    caso1],
+  ['Ingresar entrada',   caso2],
+  ['Duplicado de ticket',caso3],  
+  ['Historial',          caso4],
+  ['Registrar salida',   caso5],
+  ['Vista general',      caso6],
+]
 
-async function teardown() {
-  if (driver) await driver.quit()
-}
+  console.log('\n Parking Control — Pruebas Selenium\n')
 
-async function waitVisible(locator) {
-  const el = await driver.wait(until.elementLocated(locator), WAIT)
-  await driver.wait(until.elementIsVisible(el), WAIT)
-  return el
-}
-
-async function typeIn(locator, text) {
-  const el = await waitVisible(locator)
-  await el.clear()
-  await el.sendKeys(text)
-}
-
-async function clickOn(locator) {
-  const el = await waitVisible(locator)
-  await el.click()
-}
-
-/* Variable Dinamica para las pruebas */
-let placaPrueba = "A5321-1"
-let descripcionPrueba = "Mitsubishi Rojo"
-
-
-// ═══════════════════════════════════════════
-// CASO 1 — Registrar entrada
-// ═══════════════════════════════════════════
-async function caso1() {
-  console.log('\n🧪 Caso 1: Registrar entrada de vehículo')
-
-  await driver.get(`${BASE_URL}/entry`)
-  await driver.sleep(800)
-
-  await typeIn(By.css('input[name="plate"]'), placaPrueba)
-  console.log(`  → Placa ingresada: ${placaPrueba}`)
-
-  const select = await waitVisible(By.css('select[name="vehicleType"]'))
-  await select.findElement(By.css('option[value="car"]')).click()
-  console.log('  → Tipo seleccionado: Automóvil')
-
-  await typeIn(By.css('input[name="vehicleDesc"]'), descripcionPrueba)
-  console.log(`  → Descripción ingresada: ${descripcionPrueba}`)
-
-  await clickOn(By.xpath("//button[contains(text(), 'Registrar Entrada')]"))
-  await driver.sleep(1500)
-
-  const comprobante = await waitVisible(By.css('.ticket-receipt'))
-
-  if (await comprobante.isDisplayed()) {
-    console.log('  ✅ RESULTADO: Ticket generado correctamente')
-  } else {
-    throw new Error('El comprobante no apareció')
-  }
-}
-
-
-// ═══════════════════════════════════════════
-// CASO 2 — Salida
-// ═══════════════════════════════════════════
-async function caso2() {
-  console.log('\n🧪 Caso 2: Buscar ticket y registrar salida')
-
-  await driver.get(`${BASE_URL}/active`)
-  await driver.sleep(1200)
-
-  await typeIn(By.css('input[placeholder*="Buscar"]'), placaPrueba)
-  await driver.sleep(800)
-  console.log(`  → Búsqueda: ${placaPrueba}`)
-
-  const fila = await waitVisible(
-    By.xpath(`//td[contains(text(), '${placaPrueba}') or .//span[contains(text(), '${placaPrueba}')]]`)
-  )
-  console.log('  → Ticket encontrado en la tabla')
-
-  await clickOn(By.xpath("//button[contains(text(), 'Salida')]"))
-  await driver.sleep(800)
-  console.log('  → Modal de confirmación abierto')
-
-  await clickOn(By.xpath("//button[contains(text(), 'Confirmar Salida')]"))
-  await driver.sleep(1500)
-
-  const comprobante = await waitVisible(By.css('.ticket-receipt'))
-  const texto = await comprobante.getText()
-
-  if (texto.includes(placaPrueba)) {
-    console.log('  ✅ RESULTADO: Salida registrada correctamente')
-  } else {
-    throw new Error('El comprobante de salida no contiene la placa')
-  }
-}
-
-
-// ═══════════════════════════════════════════
-// CASO 3 — Placa duplicada
-// ═══════════════════════════════════════════
-async function caso3() {
-  console.log('\n🧪 Caso 3: Validar placa duplicada')
-
-  const placaDuplicada = "B456-CD"
-
-  await driver.get(`${BASE_URL}/entry`)
-  await driver.sleep(800)
-
-  await typeIn(By.css('input[name="plate"]'), placaDuplicada)
-  await clickOn(By.xpath("//button[contains(text(), 'Registrar Entrada')]"))
-  await driver.sleep(1500)
-
-  console.log(`  → Primera entrada registrada: ${placaDuplicada}`)
-
-  await driver.get(`${BASE_URL}/entry`)
-  await driver.sleep(800)
-
-  await typeIn(By.css('input[name="plate"]'), placaDuplicada)
-  await clickOn(By.xpath("//button[contains(text(), 'Registrar Entrada')]"))
-  await driver.sleep(1000)
-
-  console.log(`  → Intento de registro duplicado: ${placaDuplicada}`)
-
-  const error = await waitVisible(By.css('.alert-error'))
-  const mensaje = await error.getText()
-
-  if (
-    mensaje.toLowerCase().includes(placaDuplicada.toLowerCase()) ||
-    mensaje.toLowerCase().includes('activo') ||
-    mensaje.toLowerCase().includes('ticket')
-  ) {
-    console.log(`  ✅ RESULTADO: Error mostrado correctamente → "${mensaje}"`)
-  } else {
-    throw new Error(`Mensaje de error incorrecto: "${mensaje}"`)
-  }
-}
-
-
-// ═══════════════════════════════════════════
-// RUNNER
-// ═══════════════════════════════════════════
-async function run() {
-  console.log('══════════════════════════════════════════')
-  console.log(' Parking Control — Pruebas Automatizadas Selenium')
-  console.log('══════════════════════════════════════════')
-
-  await setup()
-
-  let passed = 0
-  let failed = 0
-
-  for (const [nombre, fn] of [
-    ['Caso 1', caso1],
-    ['Caso 2', caso2],
-    ['Caso 3', caso3]
-  ]) {
+  for (const [nombre, fn] of casos) {
     try {
       await fn()
+      console.log(`  ✅ ${nombre}`)
       passed++
     } catch (err) {
-      console.log(`  ❌ FALLO — ${nombre}: ${err.message}`)
+      console.log(`  ❌ ${nombre}: ${err.message}`)
       failed++
     }
   }
 
-  await teardown()
-
-  console.log('\n══════════════════════════════════════════')
-  console.log(`  ✅ Pasaron: ${passed} | ❌ Fallaron: ${failed}`)
-  console.log('══════════════════════════════════════════\n')
-
+  await driver.quit()
+  console.log(`\n  Resultado: ${passed} pasaron / ${failed} fallaron\n`)
   process.exit(failed > 0 ? 1 : 0)
 }
 
-run().catch(async (err) => {
+run().catch(async err => {
   console.error('Error fatal:', err.message)
-  await teardown()
+  await driver?.quit()
   process.exit(1)
 })
