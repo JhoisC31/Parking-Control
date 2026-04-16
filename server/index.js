@@ -27,6 +27,6 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`\n  PARKCTL Server corriendo`)
+  console.log(`\n  Parking Control  Server corriendo`)
   console.log(`  http://localhost:${PORT}/api/health\n`)
 })

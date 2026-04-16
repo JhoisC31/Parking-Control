@@ -15,7 +15,7 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS tickets (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       plate        TEXT    NOT NULL COLLATE NOCASE,
-      vehicle_type TEXT    NOT NULL DEFAULT 'car',
+      vehicle_type TEXT    NOT NULL DEFAULT 'automovil',
       vehicle_desc TEXT,
       space_number INTEGER NOT NULL,
       entry_time   TEXT    NOT NULL,

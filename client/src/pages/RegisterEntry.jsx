@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 const VEHICLE_TYPES = [
-  { value: 'car',        label: 'Automóvil',       rate: 50 },
-  { value: 'motorcycle', label: 'Motocicleta',      rate: 30 },
-  { value: 'truck',      label: 'Camioneta / SUV',  rate: 60 },
+  { value: 'automovil',        label: 'Automóvil',       rate: 50 },
+  { value: 'motocicleta', label: 'Motocicleta',      rate: 30 },
+  { value: 'camioneta',      label: 'Camioneta / SUV',  rate: 60 },
 ]
 
 export default function RegisterEntry() {
   const { availability, fetchAvailability, registerEntry } = useApp()
-  const [form, setForm]       = useState({ plate: '', vehicleType: 'car', vehicleDesc: '' })
+  const [form, setForm]       = useState({ plate: '', vehicleType: 'automovil', vehicleDesc: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
   const [success, setSuccess] = useState(null)
@@ -32,7 +32,7 @@ export default function RegisterEntry() {
         vehicleDesc: form.vehicleDesc.trim(),
       })
       setSuccess(ticket)
-      setForm({ plate: '', vehicleType: 'car', vehicleDesc: '' })
+      setForm({ plate: '', vehicleType: 'automovil', vehicleDesc: '' })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -106,7 +106,7 @@ export default function RegisterEntry() {
                 <button type="submit" className="btn btn-primary btn-lg" disabled={loading || availability.available <= 0} style={{ flex: 1 }}>
                   {loading ? 'Registrando...' : 'Registrar Entrada'}
                 </button>
-                <button type="button" className="btn btn-secondary btn-lg" onClick={() => { setForm({ plate: '', vehicleType: 'car', vehicleDesc: '' }); setError(null); setSuccess(null) }}>
+                <button type="button" className="btn btn-secondary btn-lg" onClick={() => { setForm({ plate: '', vehicleType: 'automovil', vehicleDesc: '' }); setError(null); setSuccess(null) }}>
                   Limpiar
                 </button>
               </div>

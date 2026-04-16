@@ -2,8 +2,8 @@ const express = require('express')
 const router  = express.Router()
 const db      = require('../db')
 
-const RATES = { car: 50, motorcycle: 30, truck: 70 }
-const MAX_SPACES = 50 // Total parking capacity
+const RATES = { automovil: 50, motocicleta: 30, camioneta: 70 }
+const MAX_SPACES = 10 // Total parking capacity
 
 function fmt(row) {
   if (!row) return null
@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/tickets/entry
 router.post('/entry', async (req, res) => {
   try {
-    const { plate, vehicleType = 'car', vehicleDesc } = req.body
+    const { plate, vehicleType = 'automovil', vehicleDesc } = req.body
 
     if (!plate || !plate.trim())
       return res.status(400).json({ message: 'La placa del vehículo es requerida.' })
@@ -66,7 +66,7 @@ router.post('/entry', async (req, res) => {
     if (!/^[A-Z0-9\-]{4,10}$/.test(plateClean))
       return res.status(400).json({ message: 'Formato de placa inválido. Ej: A123-BC.' })
 
-    if (!['car', 'motorcycle', 'truck'].includes(vehicleType))
+    if (!['automovil', 'motocicleta', 'camioneta'].includes(vehicleType))
       return res.status(400).json({ message: 'Tipo de vehículo inválido.' })
 
     // Regla 1: vehículo no puede tener más de un ticket activo
@@ -110,7 +110,7 @@ router.put('/:id/exit', async (req, res) => {
     const exitTime  = new Date().toISOString()
     const diffHours = (new Date(exitTime) - new Date(ticket.entry_time)) / (1000 * 60 * 60)
     const hours     = Math.max(1, Math.ceil(diffHours))
-    const rate      = RATES[ticket.vehicle_type] || RATES.car
+    const rate      = RATES[ticket.vehicle_type] || RATES.automovil
     const totalCost = hours * rate
 
     await db.run2(

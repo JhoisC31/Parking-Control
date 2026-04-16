@@ -90,7 +90,7 @@ export default function TicketHistory() {
             </div>
             <div className="modal-body">
               <div className="ticket-receipt">
-                <div className="ticket-receipt-title">PARKCTL — COMPROBANTE</div>
+                <div className="ticket-receipt-title">Parking — COMPROBANTE</div>
                 <div className="receipt-row"><span className="key">TICKET #</span><span className="val">{String(detail.id).padStart(6,'0')}</span></div>
                 <div className="receipt-row"><span className="key">PLACA</span><span className="val" style={{ color: 'var(--accent)', fontSize: '1rem' }}>{detail.plate}</span></div>
                 <div className="receipt-row"><span className="key">TIPO</span><span className="val" style={{ textTransform: 'capitalize' }}>{detail.vehicleType}</span></div>
