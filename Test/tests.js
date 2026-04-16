@@ -9,8 +9,8 @@ const WAIT     = 7000
 
 
 /* Variables dinamicas para las pruebas */
-const PLACA    = 'A-44322'
-const DESC     = 'Suzuki Gris'
+const PLACA    = ''
+const DESC     = ''
  
 /* Carpeta */
 const SCREENSHOTS_DIR = path.resolve(__dirname, 'screenshots')
